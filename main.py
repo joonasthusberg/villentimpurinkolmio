@@ -1,4 +1,5 @@
 import tkinter as tk
+import os
 from tkinter import ttk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -24,10 +25,11 @@ class VillenTimpurinkolmioApp:
         self.style = ttk.Style()
         self.style.configure("Calc.TButton", foreground="#FFFFFF", background="#FF4081", font=("Arial", 12, "bold"))
 
-        self.fig = Figure(figsize=(5, 4), dpi=100)
-        self.plot_3d = self.fig.add_subplot(111, projection='3d')
-        self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().pack()
+        if "DISPLAY" in os.environ:
+            self.fig = Figure(figsize=(5, 4), dpi=100)
+            self.plot_3d = self.fig.add_subplot(111, projection='3d')
+            self.canvas = FigureCanvasTkAgg(self.fig, master=root)
+            self.canvas.get_tk_widget().pack()
 
     def calculate(self):
         try:
@@ -38,12 +40,13 @@ class VillenTimpurinkolmioApp:
             result_text = f"Ulottuvuus 'b': {dimension_b:.2f}\nUlottuvuus 'c': {dimension_c:.2f}"
             self.result_label.config(text=result_text)
 
-            self.plot_3d.clear()
-            self.plot_3d.plot([0, dimension_b], [0, dimension_b], [0, dimension_c], marker='o')
-            self.plot_3d.set_xlabel('X')
-            self.plot_3d.set_ylabel('Y')
-            self.plot_3d.set_zlabel('Z')
-            self.canvas.draw()
+            if "DISPLAY" in os.environ:
+                self.plot_3d.clear()
+                self.plot_3d.plot([0, dimension_b], [0, dimension_b], [0, dimension_c], marker='o')
+                self.plot_3d.set_xlabel('X')
+                self.plot_3d.set_ylabel('Y')
+                self.plot_3d.set_zlabel('Z')
+                self.canvas.draw()
 
         except ValueError:
             self.result_label.config(text="Virheellinen syöte. Ole hyvä ja anna kelvollinen numero.")
