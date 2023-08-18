@@ -1,57 +1,30 @@
-import tkinter as tk
-import os
-from tkinter import ttk
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from flask import Flask, render_template, request
+from flask_wtf import FlaskForm
+from wtforms import FloatField, SubmitField
+from wtforms.validators import InputRequired
+import math
 
-class VillenTimpurinkolmioApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Villen Timpurinkolmio")
-        self.root.configure(bg="#1E1E1E")
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key_here'
 
-        self.label_a = tk.Label(root, text="Syötä ulottuvuus 'a':", fg="#FFFFFF", bg="#1E1E1E", font=("Arial", 14, "bold"))
-        self.label_a.pack(pady=20)
+class DimensionForm(FlaskForm):
+    dimension_a = FloatField('Ulottuvuus a', validators=[InputRequired()])
+    submit = SubmitField('Laske')
 
-        self.entry_a = tk.Entry(root, font=("Arial", 12))
-        self.entry_a.pack(pady=5)
+@app.route('/', methods=['GET', 'POST'])
+def calculate_dimension():
+    form = DimensionForm()
 
-        self.calculate_button = ttk.Button(root, text="Laske", command=self.calculate, style="Calc.TButton")
-        self.calculate_button.pack(pady=20)
+    if form.validate_on_submit():
+        dimension_a = form.dimension_a.data
+        dimension_b = (4 / 3) * dimension_a
+        dimension_c = (5 / 3) * dimension_a
 
-        self.result_label = tk.Label(root, text="", fg="#FFFFFF", bg="#1E1E1E", font=("Arial", 12))
-        self.result_label.pack(pady=20)
+        result_text = f"Ulottuvuus 'b': {dimension_b:.2f}\nUlottuvuus 'c': {dimension_c:.2f}"
 
-        self.style = ttk.Style()
-        self.style.configure("Calc.TButton", foreground="#FFFFFF", background="#FF4081", font=("Arial", 12, "bold"))
+        return render_template('index.html', form=form, result_text=result_text)
 
-        if "DISPLAY" in os.environ:
-            self.fig = Figure(figsize=(5, 4), dpi=100)
-            self.plot_3d = self.fig.add_subplot(111, projection='3d')
-            self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-            self.canvas.get_tk_widget().pack()
-
-    def calculate(self):
-        try:
-            dimension_a = float(self.entry_a.get())
-            dimension_b = (4 / 3) * dimension_a
-            dimension_c = (5 / 3) * dimension_a
-
-            result_text = f"Ulottuvuus 'b': {dimension_b:.2f}\nUlottuvuus 'c': {dimension_c:.2f}"
-            self.result_label.config(text=result_text)
-
-            if "DISPLAY" in os.environ:
-                self.plot_3d.clear()
-                self.plot_3d.plot([0, dimension_b], [0, dimension_b], [0, dimension_c], marker='o')
-                self.plot_3d.set_xlabel('X')
-                self.plot_3d.set_ylabel('Y')
-                self.plot_3d.set_zlabel('Z')
-                self.canvas.draw()
-
-        except ValueError:
-            self.result_label.config(text="Virheellinen syöte. Ole hyvä ja anna kelvollinen numero.")
+    return render_template('index.html', form=form)
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = VillenTimpurinkolmioApp(root)
-    root.mainloop()
+    app.run(debug=True)
